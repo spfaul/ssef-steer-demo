@@ -10,7 +10,7 @@ uvicorn = "*"
 python-dotenv = "*"
 requests = "*"
 pytest = "*"
-neuronpedia = {version = "*", extras = [], install_flags = ["--no-deps"]}
+
 
 
 [pipenv]
