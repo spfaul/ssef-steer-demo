@@ -11,6 +11,4 @@ python-dotenv = "*"
 requests = "*"
 pytest = "*"
 pandas = "*"
-
-[requires]
-python_version = "3.9"
+neuronpedia = {version = "*", install_flags = ["--no-deps"]}
