@@ -10,9 +10,7 @@ uvicorn = "*"
 python-dotenv = "*"
 requests = "*"
 pytest = "*"
-huggingface-hub = "*"
 pandas = "*"
-neuronpedia = {version = "*", install_flags = ["--no-deps"]}
 
 [requires]
 python_version = "3.9"
