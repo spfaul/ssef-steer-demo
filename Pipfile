@@ -10,7 +10,6 @@ uvicorn = "*"
 python-dotenv = "*"
 requests = "*"
 pytest = "*"
-pandas = "*"
 neuronpedia = {version = "*", extras = [], install_flags = ["--no-deps"]}
 
 
