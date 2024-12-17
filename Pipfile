@@ -16,3 +16,6 @@ neuronpedia = {version = "*", extras = [], install_flags = ["--no-deps"]}
 
 [pipenv]
 allow_prereleases = false
+
+[dev-packages]
+torch = {version = "*", markers = "1 > 2"}  # This ensures torch is never installed
