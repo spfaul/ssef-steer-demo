@@ -170,19 +170,22 @@ I think</textarea
       }
 
       async function makeSteeringRequest(method) {
-        const response = await fetch("http://localhost:8000/steer", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            task: document.getElementById("taskSelect").value,
-            method: method,
-            prompt: document.getElementById("promptInput").value,
-            temperature: 1.0,
-            strength_multiplier: parseFloat(strengthSlider.value) / 20, // Convert display strength to multiplier
-          }),
-        });
+        const response = await fetch(
+          "https://ssef-demo-a4cfc12e2d24.herokuapp.com/steer",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              task: document.getElementById("taskSelect").value,
+              method: method,
+              prompt: document.getElementById("promptInput").value,
+              temperature: 1.0,
+              strength_multiplier: parseFloat(strengthSlider.value) / 20, // Convert display strength to multiplier
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
