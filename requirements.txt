@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-neuronpedia --no-deps
 python = "^3.10"
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
