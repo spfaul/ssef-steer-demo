@@ -11,4 +11,8 @@ python-dotenv = "*"
 requests = "*"
 pytest = "*"
 pandas = "*"
-neuronpedia = {version = "*", install_flags = ["--no-deps"]}
+neuronpedia = {version = "*", extras = [], install_flags = ["--no-deps"]}
+
+
+[pipenv]
+allow_prereleases = false
