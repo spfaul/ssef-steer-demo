@@ -1,0 +1,18 @@
+# Pipfile
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+neuronpedia = {version = "*", install_flags = ["--no-deps"]}
+python-dotenv = "^1.0.1"
+requests = "^2.32.3"
+pytest = "^7.4.3"
+huggingface-hub = "^0.26.2"
+pandas = "^2.2.3"
+
+[requires]
+python_version = "3.9"
