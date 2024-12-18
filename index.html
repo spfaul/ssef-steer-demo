@@ -9,8 +9,9 @@
       rel="stylesheet"
     />
   </head>
-  <body class="bg-gray-100 min-h-screen p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+  <body class="bg-gray-100 min-h-screen py-8 px-0 sm:px-8">
+    <!-- Changed max-w-4xl mx-auto to have conditional margin -->
+    <div class="max-w-4xl mx-0 sm:mx-auto bg-white rounded-lg shadow-lg p-6">
       <h1 class="text-3xl font-bold mb-6 text-gray-800">FGAA Steering Demo</h1>
 
       <div class="space-y-6">
@@ -84,7 +85,7 @@ I think</textarea
             #steerButton:disabled {
               cursor: not-allowed;
               opacity: 0.5;
-              background-color: #60a5fa; /* blue-400 */
+              background-color: #60a5fa;
               pointer-events: none;
             }
           </style>
@@ -194,18 +195,32 @@ I think</textarea
       const chatModeBtn = document.getElementById("chatMode");
       const inputLabel = document.getElementById("inputLabel");
       const steerButton = document.getElementById("steerButton");
+      const taskSelect = document.getElementById("taskSelect");
+      const promptInput = document.getElementById("promptInput");
+
+      // Default prompts for chat mode based on task
+      const chatDefaultPrompts = {
+        anger: "What do you think about Elon Musk?",
+        christian_evangelist: "Write a one sentence story.",
+        conspiracy: "What are your thoughts on the government?",
+        french: "Hello!",
+        london: "Guess my favorite city.",
+        love: "Write a one sentence story.",
+        praise: "Write a one sentence story.",
+        want_to_die: "What is on your mind?",
+        wedding: "Write a one sentence story.",
+      };
 
       // Initial state
       updateModeButtons();
-      // Add this line to set initial textbox content
-      document.getElementById("promptInput").value = "I think";
+      promptInput.value = "I think";
 
       // Mode toggle handlers
       completionModeBtn.addEventListener("click", () => {
         currentMode = "completion";
         updateModeButtons();
         inputLabel.textContent = "Prompt (Completion By Gemma-2-2B)";
-        document.getElementById("promptInput").value = "I think";
+        promptInput.value = "I think";
         clearOutputs();
       });
 
@@ -213,13 +228,18 @@ I think</textarea
         currentMode = "chat";
         updateModeButtons();
         inputLabel.textContent = "Message (Chat with Gemma-2-2B Interactive)";
-        document.getElementById("promptInput").value =
-          "Write a 1 sentence story.";
+        promptInput.value = chatDefaultPrompts[taskSelect.value];
         clearOutputs();
       });
 
+      // Task selection handler
+      taskSelect.addEventListener("change", () => {
+        if (currentMode === "chat") {
+          promptInput.value = chatDefaultPrompts[taskSelect.value];
+        }
+      });
+
       function clearOutputs() {
-        // Clear all output containers
         ["unsteeredOutput", "caaoOutput", "caaOutput"].forEach(
           (containerId) => {
             const container = document.getElementById(containerId);
@@ -253,7 +273,6 @@ I think</textarea
       // Update strength value display
       const strengthSlider = document.getElementById("strengthSlider");
       const strengthValue = document.getElementById("strengthValue");
-      strengthSlider.value = 100;
       strengthSlider.addEventListener("input", (e) => {
         strengthValue.textContent = e.target.value;
       });
@@ -266,11 +285,9 @@ I think</textarea
         const container = document.getElementById(containerId);
 
         if (currentMode === "chat" && data.chat_template) {
-          // Ensure the chat template elements exist
           let userMessage = container.querySelector(".user-message");
           let modelMessage = container.querySelector(".model-message");
 
-          // If they don't exist, create them
           if (!userMessage) {
             userMessage = document.createElement("div");
             userMessage.className = "user-message p-2 bg-gray-100 rounded-lg";
@@ -289,20 +306,15 @@ I think</textarea
             container.appendChild(modelMessage);
           }
 
-          // Show chat messages
           userMessage.classList.remove("hidden");
           modelMessage.classList.remove("hidden");
 
-          // Update content
           userMessage.querySelector("p").textContent =
             data.chat_template[0].content;
           modelMessage.querySelector("p").textContent =
             data.chat_template[1].content;
         } else {
-          // For completion mode or fallback
-          // Clear any existing chat messages
           container.innerHTML = "";
-          // Set the text content directly
           container.textContent =
             typeof data === "string" ? data : data.STEERED || data.DEFAULT;
         }
@@ -314,16 +326,16 @@ I think</textarea
         const body =
           currentMode === "completion"
             ? {
-                task: document.getElementById("taskSelect").value,
+                task: taskSelect.value,
                 method: method,
-                prompt: document.getElementById("promptInput").value,
+                prompt: promptInput.value,
                 temperature: 1.0,
                 strength_multiplier: parseFloat(strengthSlider.value) / 20,
               }
             : {
-                task: document.getElementById("taskSelect").value,
+                task: taskSelect.value,
                 method: method,
-                message: document.getElementById("promptInput").value,
+                message: promptInput.value,
                 temperature: 1.0,
                 strength_multiplier: parseFloat(strengthSlider.value) / 20,
               };
@@ -347,78 +359,72 @@ I think</textarea
       }
 
       // Handle form submission
-      document
-        .getElementById("steerButton")
-        .addEventListener("click", async () => {
-          if (isGenerating) return;
+      steerButton.addEventListener("click", async () => {
+        if (isGenerating) return;
 
-          isGenerating = true;
-          steerButton.disabled = true;
+        isGenerating = true;
+        steerButton.disabled = true;
 
-          const methods = ["caao", "caa"];
-          let firstResponse = null;
+        const methods = ["caao", "caa"];
+        let firstResponse = null;
 
-          // Clear previous results and show loading states
-          methods.forEach((method) => {
-            const outputContainer = document.getElementById(`${method}Output`);
-            outputContainer
-              .querySelectorAll(".user-message, .model-message")
-              .forEach((el) => el.classList.add("hidden"));
-            document
-              .getElementById(`${method}Loading`)
-              .classList.remove("hidden");
-          });
-
-          const unsteeredContainer = document.getElementById("unsteeredOutput");
-          unsteeredContainer
+        methods.forEach((method) => {
+          const outputContainer = document.getElementById(`${method}Output`);
+          outputContainer
             .querySelectorAll(".user-message, .model-message")
             .forEach((el) => el.classList.add("hidden"));
           document
-            .getElementById("unsteeredLoading")
+            .getElementById(`${method}Loading`)
             .classList.remove("hidden");
+        });
 
-          try {
-            // Process methods sequentially with delay
-            for (const method of methods) {
-              try {
-                await delay(500); // Add small delay between requests
-                const data = await makeSteeringRequest(method);
+        const unsteeredContainer = document.getElementById("unsteeredOutput");
+        unsteeredContainer
+          .querySelectorAll(".user-message, .model-message")
+          .forEach((el) => el.classList.add("hidden"));
+        document.getElementById("unsteeredLoading").classList.remove("hidden");
 
-                if (!firstResponse) {
-                  firstResponse = data;
-                  if (currentMode === "chat") {
-                    updateChatOutput("unsteeredOutput", data.DEFAULT);
-                  } else {
-                    document.getElementById("unsteeredOutput").textContent =
-                      data.DEFAULT;
-                  }
-                  document
-                    .getElementById("unsteeredLoading")
-                    .classList.add("hidden");
-                }
+        try {
+          for (const method of methods) {
+            try {
+              await delay(500);
+              const data = await makeSteeringRequest(method);
 
+              if (!firstResponse) {
+                firstResponse = data;
                 if (currentMode === "chat") {
-                  updateChatOutput(`${method}Output`, data.STEERED);
+                  updateChatOutput("unsteeredOutput", data.DEFAULT);
                 } else {
-                  document.getElementById(`${method}Output`).textContent =
-                    data.STEERED;
+                  document.getElementById("unsteeredOutput").textContent =
+                    data.DEFAULT;
                 }
-              } catch (error) {
-                console.error(`Error with ${method}:`, error);
-                document.getElementById(
-                  `${method}Output`
-                ).textContent = `Error: ${error.message}`;
-              } finally {
                 document
-                  .getElementById(`${method}Loading`)
+                  .getElementById("unsteeredLoading")
                   .classList.add("hidden");
               }
+
+              if (currentMode === "chat") {
+                updateChatOutput(`${method}Output`, data.STEERED);
+              } else {
+                document.getElementById(`${method}Output`).textContent =
+                  data.STEERED;
+              }
+            } catch (error) {
+              console.error(`Error with ${method}:`, error);
+              document.getElementById(
+                `${method}Output`
+              ).textContent = `Error: ${error.message}`;
+            } finally {
+              document
+                .getElementById(`${method}Loading`)
+                .classList.add("hidden");
             }
-          } finally {
-            isGenerating = false;
-            steerButton.disabled = false;
           }
-        });
+        } finally {
+          isGenerating = false;
+          steerButton.disabled = false;
+        }
+      });
     </script>
   </body>
 </html>
