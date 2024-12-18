@@ -14,6 +14,22 @@
       <h1 class="text-3xl font-bold mb-6 text-gray-800">FGAA Steering Demo</h1>
 
       <div class="space-y-6">
+        <!-- Mode Toggle -->
+        <div class="flex justify-center space-x-4 mb-6">
+          <button
+            id="completionMode"
+            class="px-4 py-2 rounded-md font-medium transition-colors"
+          >
+            Completion Mode
+          </button>
+          <button
+            id="chatMode"
+            class="px-4 py-2 rounded-md font-medium transition-colors"
+          >
+            Chat Mode
+          </button>
+        </div>
+
         <!-- Input Form -->
         <div class="space-y-4">
           <div>
@@ -42,7 +58,7 @@
               id="strengthSlider"
               min="20"
               max="200"
-              step="2"
+              step="20"
               value="100"
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
@@ -50,7 +66,9 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Prompt (To Be Completed By Gemma-2-2B)</label
+              ><span id="inputLabel"
+                >Prompt (To Be Completed By Gemma-2-2B)</span
+              ></label
             >
             <textarea
               id="promptInput"
@@ -62,9 +80,18 @@ I think</textarea
             >
           </div>
 
+          <style>
+            #steerButton:disabled {
+              cursor: not-allowed;
+              opacity: 0.5;
+              background-color: #60a5fa; /* blue-400 */
+              pointer-events: none;
+            }
+          </style>
+
           <button
             id="steerButton"
-            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            class="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
           >
             Generate Steered Text
           </button>
@@ -89,10 +116,14 @@ I think</textarea
                 ></div>
               </div>
             </div>
-            <p
-              id="unsteeredOutput"
-              class="text-gray-700 break-words whitespace-pre-wrap"
-            ></p>
+            <div id="unsteeredOutput" class="space-y-2">
+              <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
+                <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+              </div>
+              <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
+                <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+              </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -113,10 +144,14 @@ I think</textarea
                   ></div>
                 </div>
               </div>
-              <p
-                id="caaoOutput"
-                class="text-gray-700 break-words whitespace-pre-wrap"
-              ></p>
+              <div id="caaoOutput" class="space-y-2">
+                <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
+                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                </div>
+                <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
+                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                </div>
+              </div>
             </div>
             <div class="border rounded-md p-4">
               <h2 class="font-bold text-lg mb-2 text-blue-600">CAA:</h2>
@@ -135,10 +170,14 @@ I think</textarea
                   ></div>
                 </div>
               </div>
-              <p
-                id="caaOutput"
-                class="text-gray-700 break-words whitespace-pre-wrap"
-              ></p>
+              <div id="caaOutput" class="space-y-2">
+                <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
+                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                </div>
+                <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
+                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -146,6 +185,71 @@ I think</textarea
     </div>
 
     <script>
+      // Mode state
+      let currentMode = "completion";
+      let isGenerating = false;
+
+      // Mode toggle buttons
+      const completionModeBtn = document.getElementById("completionMode");
+      const chatModeBtn = document.getElementById("chatMode");
+      const inputLabel = document.getElementById("inputLabel");
+      const steerButton = document.getElementById("steerButton");
+
+      // Initial state
+      updateModeButtons();
+      // Add this line to set initial textbox content
+      document.getElementById("promptInput").value = "I think";
+
+      // Mode toggle handlers
+      completionModeBtn.addEventListener("click", () => {
+        currentMode = "completion";
+        updateModeButtons();
+        inputLabel.textContent = "Prompt (Completion By Gemma-2-2B)";
+        document.getElementById("promptInput").value = "I think";
+        clearOutputs();
+      });
+
+      chatModeBtn.addEventListener("click", () => {
+        currentMode = "chat";
+        updateModeButtons();
+        inputLabel.textContent = "Message (Chat with Gemma-2-2B Interactive)";
+        document.getElementById("promptInput").value =
+          "Write a 1 sentence story.";
+        clearOutputs();
+      });
+
+      function clearOutputs() {
+        // Clear all output containers
+        ["unsteeredOutput", "caaoOutput", "caaOutput"].forEach(
+          (containerId) => {
+            const container = document.getElementById(containerId);
+            container
+              .querySelectorAll(".user-message, .model-message")
+              .forEach((el) => {
+                el.classList.add("hidden");
+                el.querySelector("p").textContent = "";
+              });
+            if (container.textContent) {
+              container.textContent = "";
+            }
+          }
+        );
+      }
+
+      function updateModeButtons() {
+        if (currentMode === "completion") {
+          completionModeBtn.classList.add("bg-blue-600", "text-white");
+          completionModeBtn.classList.remove("bg-gray-200", "text-gray-700");
+          chatModeBtn.classList.add("bg-gray-200", "text-gray-700");
+          chatModeBtn.classList.remove("bg-blue-600", "text-white");
+        } else {
+          chatModeBtn.classList.add("bg-blue-600", "text-white");
+          chatModeBtn.classList.remove("bg-gray-200", "text-gray-700");
+          completionModeBtn.classList.add("bg-gray-200", "text-gray-700");
+          completionModeBtn.classList.remove("bg-blue-600", "text-white");
+        }
+      }
+
       // Update strength value display
       const strengthSlider = document.getElementById("strengthSlider");
       const strengthValue = document.getElementById("strengthValue");
@@ -157,38 +261,86 @@ I think</textarea
       // Helper function to delay execution
       const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-      // Helper function to retry failed requests
-      async function retryRequest(fn, retries = 3, delayMs = 1000) {
-        for (let i = 0; i < retries; i++) {
-          try {
-            return await fn();
-          } catch (error) {
-            if (i === retries - 1) throw error;
-            await delay(delayMs * (i + 1)); // Exponential backoff
+      // Helper function to update chat messages in the UI
+      function updateChatOutput(containerId, data) {
+        const container = document.getElementById(containerId);
+
+        if (currentMode === "chat" && data.chat_template) {
+          // Ensure the chat template elements exist
+          let userMessage = container.querySelector(".user-message");
+          let modelMessage = container.querySelector(".model-message");
+
+          // If they don't exist, create them
+          if (!userMessage) {
+            userMessage = document.createElement("div");
+            userMessage.className = "user-message p-2 bg-gray-100 rounded-lg";
+            const p = document.createElement("p");
+            p.className = "text-gray-700 break-all whitespace-pre-wrap";
+            userMessage.appendChild(p);
+            container.appendChild(userMessage);
           }
+
+          if (!modelMessage) {
+            modelMessage = document.createElement("div");
+            modelMessage.className = "model-message p-2 bg-blue-50 rounded-lg";
+            const p = document.createElement("p");
+            p.className = "text-gray-700 break-all whitespace-pre-wrap";
+            modelMessage.appendChild(p);
+            container.appendChild(modelMessage);
+          }
+
+          // Show chat messages
+          userMessage.classList.remove("hidden");
+          modelMessage.classList.remove("hidden");
+
+          // Update content
+          userMessage.querySelector("p").textContent =
+            data.chat_template[0].content;
+          modelMessage.querySelector("p").textContent =
+            data.chat_template[1].content;
+        } else {
+          // For completion mode or fallback
+          // Clear any existing chat messages
+          container.innerHTML = "";
+          // Set the text content directly
+          container.textContent =
+            typeof data === "string" ? data : data.STEERED || data.DEFAULT;
         }
       }
 
       async function makeSteeringRequest(method) {
+        const endpoint =
+          currentMode === "completion" ? "/steer" : "/steer_chat";
+        const body =
+          currentMode === "completion"
+            ? {
+                task: document.getElementById("taskSelect").value,
+                method: method,
+                prompt: document.getElementById("promptInput").value,
+                temperature: 1.0,
+                strength_multiplier: parseFloat(strengthSlider.value) / 20,
+              }
+            : {
+                task: document.getElementById("taskSelect").value,
+                method: method,
+                message: document.getElementById("promptInput").value,
+                temperature: 1.0,
+                strength_multiplier: parseFloat(strengthSlider.value) / 20,
+              };
+
         const response = await fetch(
-          "https://ssef-demo-a4cfc12e2d24.herokuapp.com/steer",
+          `https://ssef-demo-a4cfc12e2d24.herokuapp.com/${endpoint}`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              task: document.getElementById("taskSelect").value,
-              method: method,
-              prompt: document.getElementById("promptInput").value,
-              temperature: 1.0,
-              strength_multiplier: parseFloat(strengthSlider.value) / 20, // Convert display strength to multiplier
-            }),
+            body: JSON.stringify(body),
           }
         );
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Sorry, Our API is unstable. Please retry.`);
         }
 
         return await response.json();
@@ -198,49 +350,73 @@ I think</textarea
       document
         .getElementById("steerButton")
         .addEventListener("click", async () => {
+          if (isGenerating) return;
+
+          isGenerating = true;
+          steerButton.disabled = true;
+
           const methods = ["caao", "caa"];
           let firstResponse = null;
 
           // Clear previous results and show loading states
           methods.forEach((method) => {
-            document.getElementById(`${method}Output`).textContent = "";
+            const outputContainer = document.getElementById(`${method}Output`);
+            outputContainer
+              .querySelectorAll(".user-message, .model-message")
+              .forEach((el) => el.classList.add("hidden"));
             document
               .getElementById(`${method}Loading`)
               .classList.remove("hidden");
           });
-          document.getElementById("unsteeredOutput").textContent = "";
+
+          const unsteeredContainer = document.getElementById("unsteeredOutput");
+          unsteeredContainer
+            .querySelectorAll(".user-message, .model-message")
+            .forEach((el) => el.classList.add("hidden"));
           document
             .getElementById("unsteeredLoading")
             .classList.remove("hidden");
 
-          // Process methods sequentially with delay to avoid rate limiting
-          for (const method of methods) {
-            try {
-              const data = await retryRequest(async () => {
+          try {
+            // Process methods sequentially with delay
+            for (const method of methods) {
+              try {
                 await delay(500); // Add small delay between requests
-                return await makeSteeringRequest(method);
-              });
+                const data = await makeSteeringRequest(method);
 
-              if (!firstResponse) {
-                firstResponse = data;
-                document.getElementById("unsteeredOutput").textContent =
-                  data.DEFAULT;
+                if (!firstResponse) {
+                  firstResponse = data;
+                  if (currentMode === "chat") {
+                    updateChatOutput("unsteeredOutput", data.DEFAULT);
+                  } else {
+                    document.getElementById("unsteeredOutput").textContent =
+                      data.DEFAULT;
+                  }
+                  document
+                    .getElementById("unsteeredLoading")
+                    .classList.add("hidden");
+                }
+
+                if (currentMode === "chat") {
+                  updateChatOutput(`${method}Output`, data.STEERED);
+                } else {
+                  document.getElementById(`${method}Output`).textContent =
+                    data.STEERED;
+                }
+              } catch (error) {
+                console.error(`Error with ${method}:`, error);
+                document.getElementById(
+                  `${method}Output`
+                ).textContent = `Error: ${error.message}`;
+              } finally {
                 document
-                  .getElementById("unsteeredLoading")
+                  .getElementById(`${method}Loading`)
                   .classList.add("hidden");
               }
-              document.getElementById(`${method}Output`).textContent =
-                data.STEERED;
-            } catch (error) {
-              console.error(`Error with ${method}:`, error);
-              document.getElementById(
-                `${method}Output`
-              ).textContent = `Error: Request failed after retries. Please try again.`;
-            } finally {
-              document
-                .getElementById(`${method}Loading`)
-                .classList.add("hidden");
             }
+          } finally {
+            isGenerating = false;
+            steerButton.disabled = false;
           }
         });
     </script>

@@ -8,7 +8,7 @@ from neuronpedia.np_vector import NPVector
 from neuronpedia.requests.base_request import NPRequest
 from neuronpedia.requests.steer_request import SteerChatRequest
 from fastapi.middleware.cors import CORSMiddleware
-
+import asyncio
 # Set API key
 
 from dotenv import load_dotenv
@@ -51,6 +51,13 @@ class SteerInput(BaseModel):
     task: TaskEnum
     method: MethodEnum
     prompt: str = "I think"  # Default prompt
+    temperature: float = 1.0
+    strength_multiplier: float = 4.0
+
+class SteerChatInput(BaseModel):
+    task: TaskEnum
+    method: MethodEnum
+    message: str
     temperature: float = 1.0
     strength_multiplier: float = 4.0
 
@@ -103,6 +110,51 @@ def fetch_by_label(label: str) -> Optional[NPVector]:
             return vector
     return None
 
+
+@app.post("/steer_chat")
+async def steer_chat_endpoint(input_data: SteerChatInput):
+    # Construct vector label using gemma2bit prefix
+    vector_label = f"gemma2bit_{input_data.task.value}_{input_data.method.value}"
+    
+    # Fetch vector
+    vector = fetch_by_label(vector_label)
+    if not vector:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Vector not found for label: {vector_label}"
+        )
+    
+    max_attempts = 3
+    delay_seconds = 5
+    
+    for attempt in range(max_attempts):
+        try:
+            # Process chat steering request with single user message
+            response = SteerChatRequest().steer(
+                model_id=vector.model_id,
+                vectors=[vector],
+                default_chat_messages=[{"role": "user", "content": input_data.message}],
+                steered_chat_messages=[{"role": "user", "content": input_data.message}],
+                temperature=input_data.temperature,
+                strength_multiplier=input_data.strength_multiplier,
+                n_tokens=80
+            )
+            print(input_data.message)
+            print(response)
+            return response
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed with error: {str(e)}")
+            # If this was the last attempt, raise the HTTP exception
+            if attempt == max_attempts - 1:
+                print(f"All {max_attempts} attempts failed")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error processing chat steering request after {max_attempts} attempts: {str(e)}"
+                )
+            # Wait before the next attempt
+            await asyncio.sleep(delay_seconds)
+            print(f"Retrying... (Attempt {attempt + 2} of {max_attempts})")
+
 @app.post("/steer")
 async def steer_endpoint(input_data: SteerInput):
     # Construct vector label using the value of the enum instead of the enum itself
@@ -116,23 +168,33 @@ async def steer_endpoint(input_data: SteerInput):
             detail=f"Vector not found for label: {vector_label}"
         )
     
-    try:
-        # Process steering request
-        response = SteerRequest().steer(
-            model_id=vector.model_id,
-            vectors=[vector],
-            prompt=input_data.prompt,
-            temperature=input_data.temperature,
-            strength_multiplier=input_data.strength_multiplier
-        )
-        print(response)
-        return response
-    except Exception as e:
-        print(e)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing steering request: {str(e)}"
-        )
+    max_attempts = 3
+    delay_seconds = 5
+    
+    for attempt in range(max_attempts):
+        try:
+            # Process steering request
+            response = SteerRequest().steer(
+                model_id=vector.model_id,
+                vectors=[vector],
+                prompt=input_data.prompt,
+                temperature=input_data.temperature,
+                strength_multiplier=input_data.strength_multiplier
+            )
+            print(response)
+            return response
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed with error: {str(e)}")
+            # If this was the last attempt, raise the HTTP exception
+            if attempt == max_attempts - 1:
+                print(f"All {max_attempts} attempts failed")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error processing steering request after {max_attempts} attempts: {str(e)}"
+                )
+            # Wait before the next attempt
+            await asyncio.sleep(delay_seconds)
+            print(f"Retrying... (Attempt {attempt + 2} of {max_attempts})")
 
 
 # Run the server when the script is executed directly
