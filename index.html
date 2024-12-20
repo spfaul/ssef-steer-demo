@@ -10,6 +10,40 @@
     />
   </head>
   <body class="bg-gray-100 min-h-screen p-0 sm:py-8 sm:px-8">
+    <!-- Warning Modal -->
+    <div
+      id="warningModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-8 max-w-lg mx-4">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">
+          Important: Content Warning
+        </h2>
+        <p class="text-gray-700 mb-6">
+          This demo allows experimentation with FGAA steering vectors, including
+          some designed to induce negative emotional states or concerning
+          topics. While activation steering guides language model behavior, it
+          <b>does not</b> provide complete control over the model's outputs. Due
+          to FGAA's effectiveness at influencing model behavior, certain vectors
+          (particularly those related to anger or self-harm) can produce
+          <b>highly disturbing content</b> at higher steering scales, including
+          <b>profanity, abuse, and graphic violence</b>. This emergence of
+          concerning content is a natural consequence of successfully steering
+          the model toward these emotional states or topics. While this behavior
+          illustrates important challenges in language model control, please be
+          advised that some outputs may be inappropriate for professional
+          settings. We recommend starting with positive steering vectors and low
+          scales if you're new to activation steering.
+        </p>
+        <button
+          id="acknowledgeButton"
+          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          I Understand, Continue to Demo
+        </button>
+      </div>
+    </div>
+
     <!-- Changed max-w-4xl mx-auto to have conditional margin -->
     <div class="max-w-4xl m-0 sm:mx-auto bg-white rounded-lg shadow-lg p-6">
       <h1 class="text-3xl font-bold mb-6 text-gray-800">FGAA Steering Demo</h1>
@@ -186,6 +220,20 @@ I think</textarea
     </div>
 
     <script>
+      // Add this at the beginning of your script
+      const warningModal = document.getElementById("warningModal");
+      const acknowledgeButton = document.getElementById("acknowledgeButton");
+
+      // Show modal on page load
+      window.addEventListener("load", () => {
+        warningModal.style.display = "flex";
+      });
+
+      // Hide modal when acknowledged
+      acknowledgeButton.addEventListener("click", () => {
+        warningModal.style.display = "none";
+      });
+
       // Mode state
       let currentMode = "completion";
       let isGenerating = false;
