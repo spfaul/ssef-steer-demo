@@ -152,10 +152,10 @@ I think</textarea
             </div>
             <div id="unsteeredOutput" class="space-y-2">
               <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
-                <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
               </div>
               <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
-                <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
               </div>
             </div>
           </div>
@@ -183,10 +183,10 @@ I think</textarea
               </div>
               <div id="caaoOutput" class="space-y-2">
                 <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
-                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                  <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
                 </div>
                 <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
-                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                  <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
                 </div>
               </div>
             </div>
@@ -214,10 +214,10 @@ I think</textarea
               </div>
               <div id="caaOutput" class="space-y-2">
                 <div class="user-message hidden p-2 bg-gray-100 rounded-lg">
-                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                  <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
                 </div>
                 <div class="model-message hidden p-2 bg-blue-50 rounded-lg">
-                  <p class="text-gray-700 break-all whitespace-pre-wrap"></p>
+                  <p class="text-gray-700 break-words whitespace-pre-wrap"></p>
                 </div>
               </div>
             </div>
@@ -348,7 +348,7 @@ I think</textarea
             userMessage = document.createElement("div");
             userMessage.className = "user-message p-2 bg-gray-100 rounded-lg";
             const p = document.createElement("p");
-            p.className = "text-gray-700 break-all whitespace-pre-wrap";
+            p.className = "text-gray-700 break-words whitespace-pre-wrap";
             userMessage.appendChild(p);
             container.appendChild(userMessage);
           }
@@ -357,7 +357,7 @@ I think</textarea
             modelMessage = document.createElement("div");
             modelMessage.className = "model-message p-2 bg-blue-50 rounded-lg";
             const p = document.createElement("p");
-            p.className = "text-gray-700 break-all whitespace-pre-wrap";
+            p.className = "text-gray-700 break-words whitespace-pre-wrap";
             modelMessage.appendChild(p);
             container.appendChild(modelMessage);
           }
